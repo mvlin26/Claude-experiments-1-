@@ -171,14 +171,12 @@ export default function Layout() {
 
       {/* Main content */}
       <div className="main-area">
-        {sidebarOpen && (
-          <aside className="sidebar-container">
-            <Sidebar />
-            <div className="sidebar-footer">
-              <DailyNoteButton />
-            </div>
-          </aside>
-        )}
+        <aside className={`sidebar-container ${sidebarOpen ? '' : 'collapsed'}`}>
+          <Sidebar />
+          <div className="sidebar-footer">
+            <DailyNoteButton />
+          </div>
+        </aside>
 
         <main className="editor-area">
           <SplitView />

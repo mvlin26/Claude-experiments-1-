@@ -148,6 +148,13 @@ body {
   border-right: 1px solid var(--border);
   background: var(--bg-secondary);
   overflow: hidden;
+  transition: width var(--transition), min-width var(--transition);
+}
+
+.sidebar-container.collapsed {
+  width: 0;
+  min-width: 0;
+  border-right: none;
 }
 
 .sidebar {

@@ -23,7 +23,6 @@ export function searchNotes(notes: Note[], query: string): SearchResult[] {
 
   for (const note of notes) {
     const lowerTitle = note.title.toLowerCase();
-    const lowerContent = note.content.toLowerCase();
     const matches: SearchMatch[] = [];
     let score = 0;
 

@@ -3,7 +3,7 @@ import remarkGfm from 'remark-gfm';
 import { useNoteStore } from '../../stores/noteStore';
 
 // Transform wikilinks to clickable links
-function processWikilinks(content: string, onNavigate: (title: string) => void): string {
+function processWikilinks(content: string): string {
   return content.replace(/\[\[([^\]]+)\]\]/g, (_, title) => {
     return `[${title}](#wikilink:${encodeURIComponent(title)})`;
   });
@@ -33,7 +33,7 @@ export default function MarkdownPreview() {
     }
   };
 
-  const processed = processWikilinks(activeNote.content, handleNavigate);
+  const processed = processWikilinks(activeNote.content);
 
   return (
     <div className="markdown-preview">

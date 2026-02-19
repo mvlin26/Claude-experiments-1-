@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNoteStore } from '../../stores/noteStore';
-import type { Folder, Note } from '../../db/database';
 import { getExcerpt, formatDate } from '../../utils/markdown';
 
 interface FolderTreeProps {

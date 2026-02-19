@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { useNoteStore } from '../../stores/noteStore';
 import { useUIStore } from '../../stores/uiStore';
-import { buildGraphData, type GraphNode, type GraphLink } from '../../utils/wikilinks';
+import { buildGraphData, type GraphNode } from '../../utils/wikilinks';
 
 export default function GraphView() {
   const svgRef = useRef<SVGSVGElement>(null);

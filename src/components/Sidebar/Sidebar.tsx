@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type JSX, useState } from 'react';
 import { useNoteStore } from '../../stores/noteStore';
 import { useUIStore, type SidebarTab } from '../../stores/uiStore';
 import FolderTree from './FolderTree';

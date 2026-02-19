@@ -1466,3 +1466,69 @@ body {
   color: var(--text-muted);
   font-size: 14px;
 }
+
+/* ===== iOS / MOBILE ===== */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .titlebar {
+    padding-top: env(safe-area-inset-top);
+    height: calc(var(--titlebar-height) + env(safe-area-inset-top));
+  }
+
+  .sidebar-footer {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .editor-area {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 260px;
+    --right-panel-width: 100%;
+  }
+
+  .titlebar-center {
+    display: none;
+  }
+
+  .sidebar-container {
+    position: absolute;
+    top: var(--titlebar-height);
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar-container.collapsed {
+    width: 0;
+    min-width: 0;
+    box-shadow: none;
+  }
+
+  .right-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar-tab {
+    width: 40px;
+    height: 40px;
+  }
+
+  .note-item {
+    padding: 10px 12px;
+  }
+
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+}

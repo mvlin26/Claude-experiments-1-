@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useNoteStore } from '../../stores/noteStore';
@@ -8,6 +8,18 @@ import { db } from '../../db/database';
 function processWikilinks(content: string): string {
   return content.replace(/\[\[([^\]]+)\]\]/g, (_, title) => {
     return `[${title}](#wikilink:${encodeURIComponent(title)})`;
+  });
+}
+
+// Toggle the nth checkbox in raw markdown content
+function toggleCheckbox(content: string, checkboxIndex: number): string {
+  const pattern = /- \[([ xX])\]/g;
+  let i = 0;
+  return content.replace(pattern, (match, state) => {
+    if (i++ === checkboxIndex) {
+      return state === ' ' ? '- [x]' : '- [ ]';
+    }
+    return match;
   });
 }
 
@@ -70,8 +82,12 @@ export default function MarkdownPreview() {
   const activeNoteId = useNoteStore(s => s.activeNoteId);
   const notes = useNoteStore(s => s.notes);
   const setActiveNote = useNoteStore(s => s.setActiveNote);
+  const updateNote = useNoteStore(s => s.updateNote);
 
   const activeNote = notes.find(n => n.id === activeNoteId);
+
+  // Counter to track which checkbox we're rendering
+  const checkboxIndexRef = useRef(0);
 
   if (!activeNote) {
     return (
@@ -90,7 +106,15 @@ export default function MarkdownPreview() {
     }
   };
 
+  const handleCheckboxToggle = (index: number) => {
+    const newContent = toggleCheckbox(activeNote.content, index);
+    updateNote(activeNote.id, { content: newContent });
+  };
+
   const processed = processWikilinks(activeNote.content);
+
+  // Reset checkbox counter before each render
+  checkboxIndexRef.current = 0;
 
   return (
     <div className="markdown-preview">
@@ -124,9 +148,29 @@ export default function MarkdownPreview() {
           },
           input: ({ type, checked, ...props }) => {
             if (type === 'checkbox') {
-              return <input type="checkbox" checked={checked} readOnly {...props} />;
+              const index = checkboxIndexRef.current++;
+              return (
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  className="todo-checkbox"
+                  onChange={() => handleCheckboxToggle(index)}
+                  {...props}
+                />
+              );
             }
             return <input type={type} {...props} />;
+          },
+          li: ({ children, className, ...props }) => {
+            const isTask = className === 'task-list-item';
+            return (
+              <li
+                className={isTask ? 'task-list-item' : undefined}
+                {...props}
+              >
+                {children}
+              </li>
+            );
           },
         }}
       >

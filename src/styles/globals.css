@@ -841,6 +841,40 @@ body {
   margin-right: 6px;
 }
 
+/* Interactive checkboxes in preview */
+.todo-checkbox {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  cursor: pointer;
+  accent-color: var(--accent);
+  vertical-align: middle;
+  position: relative;
+}
+
+.todo-checkbox:hover {
+  transform: scale(1.15);
+}
+
+.task-list-item {
+  list-style: none;
+  margin-left: -20px;
+  padding: 4px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.task-list-item > p {
+  margin: 0;
+  display: inline;
+}
+
+.task-list-item:has(input:checked) {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
 /* ===== RIGHT PANEL ===== */
 .right-panel {
   width: var(--right-panel-width);

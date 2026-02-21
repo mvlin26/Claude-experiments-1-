@@ -17,6 +17,9 @@ import {
 } from '@codemirror/language';
 import { useNoteStore } from '../../stores/noteStore';
 import { useUIStore } from '../../stores/uiStore';
+import { db, type Attachment } from '../../db/database';
+import { v4 as uuid } from 'uuid';
+import FormatToolbar from './FormatToolbar';
 
 // Light theme
 const lightTheme = EditorView.theme({
@@ -54,6 +57,43 @@ const lightTheme = EditorView.theme({
   },
 });
 
+function fileToDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function storeAttachment(file: File, noteId: string): Promise<Attachment> {
+  const dataUrl = await fileToDataURL(file);
+  const attachment: Attachment = {
+    id: uuid(),
+    noteId,
+    name: file.name || 'image.png',
+    mimeType: file.type,
+    data: dataUrl,
+    createdAt: Date.now(),
+  };
+  await db.attachments.add(attachment);
+  return attachment;
+}
+
+function insertAttachmentMarkdown(view: EditorView, attachment: Attachment) {
+  const isImage = attachment.mimeType.startsWith('image/');
+  const md = isImage
+    ? `![${attachment.name}](attachment:${attachment.id})`
+    : `[${attachment.name}](attachment:${attachment.id})`;
+
+  const { from, to } = view.state.selection.main;
+  view.dispatch({
+    changes: { from, to, insert: md + '\n' },
+    selection: { anchor: from + md.length + 1 },
+  });
+  view.focus();
+}
+
 export default function NoteEditor() {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -63,6 +103,25 @@ export default function NoteEditor() {
   const theme = useUIStore(s => s.theme);
 
   const activeNote = notes.find(n => n.id === activeNoteId);
+
+  // Handle files (from paste, drop, or upload button)
+  const handleFiles = useCallback(async (files: FileList | File[]) => {
+    if (!viewRef.current || !activeNote) return;
+    for (const file of Array.from(files)) {
+      const attachment = await storeAttachment(file, activeNote.id);
+      insertAttachmentMarkdown(viewRef.current, attachment);
+    }
+  }, [activeNote]);
+
+  // Listen for file upload events from the toolbar attach button
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const files = (e as CustomEvent).detail as FileList;
+      if (files) handleFiles(files);
+    };
+    window.addEventListener('notegraph-file-upload', handler);
+    return () => window.removeEventListener('notegraph-file-upload', handler);
+  }, [handleFiles]);
 
   // Wikilink autocomplete
   const wikilinkCompletion = useCallback((context: CompletionContext) => {
@@ -101,6 +160,38 @@ export default function NoteEditor() {
       }
     });
 
+    // Handle paste with images
+    const pasteHandler = EditorView.domEventHandlers({
+      paste(event) {
+        const items = event.clipboardData?.items;
+        if (!items) return false;
+
+        const files: File[] = [];
+        for (const item of Array.from(items)) {
+          if (item.kind === 'file') {
+            const file = item.getAsFile();
+            if (file) files.push(file);
+          }
+        }
+
+        if (files.length > 0) {
+          event.preventDefault();
+          handleFiles(files);
+          return true;
+        }
+        return false;
+      },
+      drop(event) {
+        const files = event.dataTransfer?.files;
+        if (files && files.length > 0) {
+          event.preventDefault();
+          handleFiles(files);
+          return true;
+        }
+        return false;
+      },
+    });
+
     const extensions = [
       lineNumbers(),
       highlightActiveLine(),
@@ -120,6 +211,7 @@ export default function NoteEditor() {
         ...foldKeymap,
       ]),
       updateHandler,
+      pasteHandler,
       placeholder('Start writing...'),
       EditorView.lineWrapping,
     ];
@@ -165,5 +257,22 @@ export default function NoteEditor() {
     );
   }
 
-  return <div ref={editorRef} className="note-editor" />;
+  return (
+    <div className="note-editor-wrapper">
+      <FormatToolbar
+        view={viewRef.current}
+        onInsertAttachment={() => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.multiple = true;
+          input.onchange = () => {
+            if (input.files) handleFiles(input.files);
+          };
+          input.click();
+        }}
+      />
+      <div ref={editorRef} className="note-editor" />
+    </div>
+  );
 }

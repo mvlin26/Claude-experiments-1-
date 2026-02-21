@@ -36,11 +36,21 @@ export interface ClippedBookmark {
   summary: string | null;
 }
 
+export interface Attachment {
+  id: string;
+  noteId: string;
+  name: string;
+  mimeType: string;
+  data: string; // base64 data URL
+  createdAt: number;
+}
+
 class NoteGraphDB extends Dexie {
   notes!: Table<Note>;
   folders!: Table<Folder>;
   templates!: Table<Template>;
   bookmarks!: Table<ClippedBookmark>;
+  attachments!: Table<Attachment>;
 
   constructor() {
     super('NoteGraphDB');
@@ -49,6 +59,13 @@ class NoteGraphDB extends Dexie {
       folders: 'id, name, parentId',
       templates: 'id, name',
       bookmarks: 'id, url, clippedAt, noteId',
+    });
+    this.version(2).stores({
+      notes: 'id, title, folder, *tags, createdAt, updatedAt, isDaily',
+      folders: 'id, name, parentId',
+      templates: 'id, name',
+      bookmarks: 'id, url, clippedAt, noteId',
+      attachments: 'id, noteId, createdAt',
     });
   }
 }
